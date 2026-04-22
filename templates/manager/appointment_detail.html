@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Detail - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Appointment Details - #RC{{ "%06d"|format(order.order_id) }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Resident Information</h6>
+                            <div class="mb-3">
+                                <strong>Name:</strong> {{ order.resident.user.username }}<br>
+                                <strong>Email:</strong> {{ order.resident.user.ucd_email }}<br>
+                                <strong>Contact:</strong> {{ order.contact_phone or 'N/A' }}<br>
+                                <strong>Address:</strong> {{ order.detail_address or order.resident.dorm_office_addr or 'N/A' }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Appointment Information</h6>
+                            <div class="mb-3">
+                                <strong>Order Number:</strong> #RC{{ "%06d"|format(order.order_id) }}<br>
+                                <strong>Category:</strong> {{ order.garbage_type|title }}<br>
+                                <strong>Appointment Time:</strong> {{ order.reserve_time.strftime('%Y-%m-%d %H:%M') if order.reserve_time else 'N/A' }}<br>
+                                <strong>Collection Method:</strong> {{ order.recycle_method|replace('-', ' ')|title }}<br>
+                                <strong>Status:</strong> 
+                                <span class="badge bg-{{ 'warning' if order.order_status == 'pending' else 'info' if order.order_status == 'assigned' else 'success' if order.order_status == 'completed' else 'secondary' }}">
+                                    {{ order.order_status|replace('_', ' ')|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if order.recycle_weight %}
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>Collection Record</h6>
+                            <p><strong>Recycled Weight:</strong> {{ "%.1f"|format(order.recycle_weight) }}kg</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if order.remark %}
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>Remarks</h6>
+                            <p>{{ order.remark }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mt-4">
+                        {% if order.order_status == 'pending' %}
+                        <button class="btn btn-success" onclick="approveAppointment({{ order.order_id }})">
+                            <i class="fas fa-check me-1"></i>Approve Appointment
+                        </button>
+                        {% elif order.order_status in ['assigned', 'in_progress'] %}
+                        <button class="btn btn-success" onclick="completeAppointment({{ order.order_id }})">
+                            <i class="fas fa-check-circle me-1"></i>Mark as Completed
+                        </button>
+                        {% endif %}
+                        <a href="{{ url_for('manager_appointments') }}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function approveAppointment(orderId) {
+    const confirmed = await customConfirm('Approve this appointment?');
+    if (confirmed) {
+        fetch(`/manager/appointment/${orderId}/approve`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to approve appointment');
+            }
+        });
+    }
+}
+
+async function completeAppointment(orderId) {
+    // Create a custom prompt modal
+    const promptModal = document.createElement('div');
+    promptModal.className = 'modal fade';
+    promptModal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enter Recycled Weight</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="weightInput" class="form-label">Please enter recycled weight (kg):</label>
+                    <input type="number" step="0.1" min="0.1" class="form-control" id="weightInput" placeholder="Enter weight">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="weightSubmitBtn">Submit</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(promptModal);
+    
+    const modal = new bootstrap.Modal(promptModal);
+    modal.show();
+    
+    return new Promise((resolve) => {
+        document.getElementById('weightSubmitBtn').addEventListener('click', () => {
+            const weight = document.getElementById('weightInput').value;
+            if (weight && !isNaN(weight) && parseFloat(weight) > 0) {
+                modal.hide();
+                document.body.removeChild(promptModal);
+                
+                fetch(`/manager/appointment/${orderId}/complete`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({weight: weight})
+                })
+                .then(response => response.json())
+                .then(async data => {
+                    if (data.success) {
+                        await customAlert(`Appointment completed! Points awarded: ${data.points}`);
+                        location.reload();
+                    } else {
+                        await customAlert(data.message || 'Failed to complete appointment');
+                    }
+                });
+                resolve();
+            } else {
+                customAlert('Please enter a valid weight (greater than 0)');
+            }
+        });
+        
+        promptModal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(promptModal);
+            resolve();
+        }, { once: true });
+    });
+}
+</script>
+{% endblock %}
+

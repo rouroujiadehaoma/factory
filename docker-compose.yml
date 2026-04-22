@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      EXTERNAL_API_KEY: ${EXTERNAL_API_KEY:-demo-hazwaste-api-key}
+      DATABASE_URL: sqlite:////data/hazard_waste.db
+    volumes:
+      - hazwaste_data:/data
+    restart: unless-stopped
+
+volumes:
+  hazwaste_data:

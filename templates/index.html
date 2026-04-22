@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home — HazWaste Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --paper: #fafafa;
+            --ink: #1c1917;
+            --muted: #57534e;
+            --rule: #d6d3d1;
+            --chem: #d97706;
+            --chem-dark: #b45309;
+            --pad-x: clamp(1.25rem, 5vw, 4rem);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { height: 100%; }
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+        .topbar {
+            border-bottom: 1px solid var(--rule);
+            background: var(--bg);
+            padding: 0.65rem var(--pad-x);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.88rem;
+            flex-shrink: 0;
+        }
+        .brand {
+            font-weight: 600;
+            color: var(--ink);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .brand span { color: var(--chem); }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav-links a {
+            color: var(--chem-dark);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-links a:hover { text-decoration: underline; }
+        .nav-links .muted { color: var(--muted); font-weight: 400; }
+        .flash-wrap {
+            width: 100%;
+            padding: 0.5rem var(--pad-x) 0;
+            flex-shrink: 0;
+        }
+        .flash {
+            padding: 0.65rem 0.9rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.88rem;
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--chem);
+            background: var(--paper);
+        }
+        .flash.danger { border-left-color: #b91c1c; color: #7f1d1d; }
+        .flash.success { border-left-color: #15803d; color: #14532d; }
+        .main-band {
+            flex: 1 1 auto;
+            width: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 0 var(--pad-x);
+            background: var(--paper);
+            border-top: 1px solid var(--rule);
+        }
+        .sheet {
+            flex: 1 1 auto;
+            width: 100%;
+            max-width: none;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--rule);
+            border-left: 4px solid var(--chem);
+            background: var(--bg);
+            padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 2rem) clamp(0.5rem, 1vw, 0.75rem);
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        }
+        .sheet-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sheet-head { flex-shrink: 0; }
+        .course {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--chem-dark);
+            margin-bottom: 0.5rem;
+        }
+        h1 {
+            font-family: "Source Serif 4", "Times New Roman", serif;
+            font-size: clamp(1.6rem, 3.2vw, 2.35rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+            max-width: none;
+        }
+        .lead {
+            font-size: clamp(0.92rem, 1.2vw, 1.05rem);
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 0;
+            max-width: none;
+        }
+        .rule {
+            flex-shrink: 0;
+            height: 1px;
+            background: var(--rule);
+            margin: 0.75rem 0;
+            width: 100%;
+        }
+        .features-cols {
+            flex: 1 1 auto;
+            min-height: 8rem;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-auto-rows: 1fr;
+            gap: 0.75rem 1rem;
+            list-style: none;
+            width: 100%;
+            align-items: stretch;
+        }
+        .features-cols li {
+            padding: 0.75rem 0.75rem 1rem;
+            border: 1px solid var(--rule);
+            border-top: 3px solid var(--chem);
+            background: var(--paper);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 0.65rem;
+        }
+        .features-cols li img {
+            width: 100%;
+            height: auto;
+            max-height: min(200px, 28vh);
+            object-fit: contain;
+            display: block;
+            border-radius: 2px;
+            border: 1px solid var(--rule);
+            background: var(--bg);
+        }
+        .features-cols .feature-cap {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.4;
+            margin: 0;
+        }
+        .lower {
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 0.75rem 1rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--rule);
+            align-items: start;
+            width: 100%;
+        }
+        .remote {
+            padding: 1.1rem 1.15rem;
+            background: var(--paper);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--chem);
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+        .remote strong {
+            display: block;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--chem-dark);
+            margin-bottom: 0.45rem;
+        }
+        .remote code {
+            font-family: ui-monospace, monospace;
+            font-size: 0.82rem;
+            color: var(--ink);
+            background: var(--bg);
+            padding: 0.1rem 0.35rem;
+            border: 1px solid var(--rule);
+        }
+        .role-list {
+            margin: 0.5rem 0 0;
+            padding-left: 1.1rem;
+            font-size: 0.84rem;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+        .role-list li { margin-bottom: 0.35rem; }
+        .role-list strong { color: var(--ink); font-weight: 600; }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+        .actions a {
+            display: inline-block;
+            padding: 0.5rem 1.15rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid var(--chem);
+            color: var(--chem-dark);
+            background: var(--bg);
+        }
+        .actions a.primary {
+            background: var(--chem);
+            color: #fff;
+            border-color: var(--chem-dark);
+        }
+        .actions a.primary:hover { filter: brightness(0.95); }
+        .actions a:not(.primary):hover { background: var(--paper); }
+        .page-foot {
+            flex-shrink: 0;
+            margin-top: auto;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--rule);
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .page-foot a { color: var(--chem-dark); text-decoration: none; }
+        .page-foot a:hover { text-decoration: underline; }
+        @media (max-width: 900px) {
+            .features-cols { grid-template-columns: 1fr; }
+            .lower { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('index') }}"><span aria-hidden="true">◇</span> HazWaste Control</a>
+        <nav class="nav-links" aria-label="Account">
+            {% if current_user.is_authenticated %}
+            <span class="muted">{{ current_user.username }} · {{ current_user.role }}</span>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('batch_list') }}">Batches</a>
+            <a href="{{ url_for('logout') }}">Sign out</a>
+            {% else %}
+            <a href="{{ url_for('login') }}">Sign in</a>
+            <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-wrap">
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="main-band">
+        <article class="sheet">
+            <header class="sheet-head">
+                <p class="course">COMP3030J · Chemical Plant Hazardous Waste Management · SDG 12</p>
+                <h1>Chemical Plant Hazardous Waste Management</h1>
+                <p class="lead">
+                    Full-lifecycle traceability, RBAC, audit trails, rule-based alerts, compliance exports,
+                    and REST hooks for ERP / LIMS integration — aligned with <strong style="color:var(--chem-dark)">SDG 12</strong>.
+                </p>
+            </header>
+
+            <div class="rule" aria-hidden="true"></div>
+
+            <div class="sheet-body">
+                <ul class="features-cols">
+                    <li>
+                        <img src="{{ url_for('static', filename='img/landing-state-machine.svg') }}"
+                             width="320" height="200" loading="lazy" decoding="async"
+                             alt="Lifecycle state flow: only server-validated status transitions are allowed.">
+                        <p class="feature-cap">State machine enforced on the server (no illegal status jumps).</p>
+                    </li>
+                    <li>
+                        <img src="{{ url_for('static', filename='img/landing-qr-trace.svg') }}"
+                             width="320" height="200" loading="lazy" decoding="async"
+                             alt="QR code on each batch linking to a public trace page.">
+                        <p class="feature-cap">Per-batch QR codes linking to a public trace page.</p>
+                    </li>
+                    <li>
+                        <img src="{{ url_for('static', filename='img/landing-dashboard.svg') }}"
+                             width="320" height="200" loading="lazy" decoding="async"
+                             alt="Dashboard charts and regulatory CSV or PDF exports.">
+                        <p class="feature-cap">Dashboard analytics and CSV / PDF regulatory snapshots.</p>
+                    </li>
+                </ul>
+
+                <div class="lower">
+                    <div class="remote">
+                        <strong>Four roles (RBAC)</strong>
+                        <ul class="role-list">
+                            <li><strong>Administrator</strong> — system configuration, user accounts, alert rules, full data access.</li>
+                            <li><strong>Environmental safety officer</strong> — compliance oversight, alert handling, exports, operational approvals.</li>
+                            <li><strong>Operator</strong> — register batches, update status, record transfers on the plant floor.</li>
+                            <li><strong>Auditor</strong> — read-only review of batches, audit log, and regulatory exports.</li>
+                        </ul>
+                    </div>
+                    <div class="actions">
+                        {% if current_user.is_authenticated %}
+                        <a class="primary" href="{{ url_for('dashboard') }}">Open dashboard</a>
+                        <a href="{{ url_for('batch_list') }}">Batches</a>
+                        {% else %}
+                        <a class="primary" href="{{ url_for('login') }}">Sign in</a>
+                        <a href="{{ url_for('register') }}">Register</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <footer class="page-foot">
+                <span>COMP3030J · Hazardous waste control platform</span>
+                <span>
+                    <a href="{{ url_for('health') }}">/health</a>
+                    ·
+                    <a href="{{ url_for('api_health') }}">API health</a>
+                </span>
+            </footer>
+        </article>
+    </div>
+</body>
+</html>

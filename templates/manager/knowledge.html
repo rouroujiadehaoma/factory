@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Management - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Knowledge Management</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Publish New Knowledge</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('manager_knowledge') }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.knowledge_type.label(class="form-label") }}
+                            {{ form.knowledge_type(class="form-select") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="5") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.image_url.label(class="form-label") }}
+                            {{ form.image_url(class="form-control", placeholder="Optional: Image URL") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.video_url.label(class="form-label") }}
+                            {{ form.video_url(class="form-control", placeholder="Optional: Video URL") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.is_recommended.label(class="form-label") }}
+                            {{ form.is_recommended(class="form-select") }}
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Published Knowledge</h5>
+                </div>
+                <div class="card-body">
+                    {% for knowledge in knowledge_list %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6>{{ knowledge.title }}</h6>
+                        <p class="text-muted small mb-2">{{ knowledge.content[:100] }}...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ knowledge.publish_time.strftime('%Y-%m-%d') if knowledge.publish_time else 'N/A' }}</small>
+                            {% if knowledge.is_recommended %}
+                            <span class="badge bg-warning">Recommended</span>
+                            {% endif %}
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteKnowledge({{ knowledge.knowledge_id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No knowledge published yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deleteKnowledge(knowledgeId) {
+    const confirmed = await customConfirm('Are you sure you want to delete this knowledge article?');
+    if (confirmed) {
+        fetch(`/manager/knowledge/${knowledgeId}/delete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to delete knowledge');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+

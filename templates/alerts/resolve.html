@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Resolve alert{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:640px">
+    <h1 class="h4 mb-3">Resolve alert</h1>
+    <div class="alert alert-light border small">{{ event.message }}</div>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.resolution_note.label(class="form-label") }}{{ form.resolution_note(class="form-control", rows=4) }}</div>
+        {{ form.submit(class="btn btn-success") }}
+        <a class="btn btn-link" href="{{ url_for('alert_list') }}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

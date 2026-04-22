@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Management - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Feedback Management</h2>
+    <div class="card">
+        <div class="card-header bg-white">
+            <form method="GET" class="d-flex gap-2">
+                <select name="status" class="form-select" style="width: auto;">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="processing" {% if current_status == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="replied" {% if current_status == 'replied' %}selected{% endif %}>Replied</option>
+                </select>
+                <button type="submit" class="btn btn-success">Filter</button>
+            </form>
+        </div>
+        <div class="card-body">
+            {% for feedback in feedbacks.items %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="card-title mb-0">{{ feedback.feedback_type|replace('_', ' ')|title }}</h6>
+                        <span class="badge bg-{{ 'warning' if feedback.handle_status == 'pending' else 'info' if feedback.handle_status == 'processing' else 'success' }}">
+                            {{ feedback.handle_status|title }}
+                        </span>
+                    </div>
+                    <p class="card-text">{{ feedback.feedback_content }}</p>
+                    <small class="text-muted">From: {{ feedback.resident.user.username }} | {{ feedback.feedback_time.strftime('%Y-%m-%d %H:%M') if feedback.feedback_time else 'N/A' }}</small>
+                    {% if feedback.reply_content %}
+                    <div class="mt-2 p-2 bg-light rounded">
+                        <strong>Reply:</strong> {{ feedback.reply_content }}
+                    </div>
+                    {% else %}
+                    <div class="mt-2">
+                        <textarea class="form-control mb-2" id="reply_{{ feedback.feedback_id }}" rows="2" placeholder="Enter your reply..."></textarea>
+                        <button class="btn btn-success btn-sm" onclick="replyFeedback({{ feedback.feedback_id }})">
+                            <i class="fas fa-reply me-1"></i>Reply
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No feedback found</p>
+            {% endfor %}
+        </div>
+        {% if feedbacks.pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Feedback pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if feedbacks.has_prev %}
+                    <li class="page-item"><a class="page-link" href="?page={{ feedbacks.prev_num }}&status={{ current_status }}">Previous</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link">Previous</a></li>
+                    {% endif %}
+                    {% for page_num in feedbacks.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == feedbacks.page %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                            {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}&status={{ current_status }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><a class="page-link">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if feedbacks.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ feedbacks.next_num }}&status={{ current_status }}">Next</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function replyFeedback(feedbackId) {
+    const replyContent = document.getElementById('reply_' + feedbackId).value;
+    if (!replyContent.trim()) {
+        await customAlert('Please enter a reply');
+        return;
+    }
+    fetch(`/manager/feedback/${feedbackId}/reply`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({reply_content: replyContent})
+    })
+    .then(response => response.json())
+    .then(async data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            await customAlert(data.message || 'Failed to submit reply');
+        }
+    });
+}
+</script>
+{% endblock %}
+

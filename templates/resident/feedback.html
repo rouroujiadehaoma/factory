@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Feedback - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-comments me-2"></i>Submit Feedback</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('resident_feedback') }}" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.feedback_type.label(class="form-label") }}
+                            {{ form.feedback_type(class="form-select") }}
+                            {% if form.feedback_type.errors %}
+                                <div class="text-danger small">{{ form.feedback_type.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.feedback_content.label(class="form-label") }}
+                            {{ form.feedback_content(class="form-control", rows="5") }}
+                            {% if form.feedback_content.errors %}
+                                <div class="text-danger small">{{ form.feedback_content.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.feedback_img.label(class="form-label") }}
+                            <div class="input-group">
+                                <label class="btn btn-outline-secondary mb-0" for="feedback_img_input">Choose File</label>
+                                <span class="form-control" id="feedback_img_name">No file chosen</span>
+                            </div>
+                            {{ form.feedback_img(class="d-none", id="feedback_img_input", accept="image/*") }}
+                            <small class="text-muted">Optional: Upload an image to support your feedback</small>
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('feedback_img_input');
+    const fileNameDisplay = document.getElementById('feedback_img_name');
+    if (fileInput && fileNameDisplay) {
+        fileInput.addEventListener('change', function() {
+            const name = this.files && this.files.length > 0 ? this.files[0].name : 'No file chosen';
+            fileNameDisplay.textContent = name;
+        });
+    }
+});
+</script>
+{% endblock %}

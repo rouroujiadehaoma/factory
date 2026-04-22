@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 mb-3">Audit log</h1>
+    <form class="row g-2 align-items-end card card-body border-0 shadow-sm mb-3" method="get">
+        <div class="col-md-3">{{ form.actor.label(class="form-label") }}{{ form.actor(class="form-control") }}</div>
+        <div class="col-md-3">{{ form.entity_type.label(class="form-label") }}{{ form.entity_type(class="form-control") }}</div>
+        <div class="col-md-2">{{ form.batch_id.label(class="form-label") }}{{ form.batch_id(class="form-control", placeholder='WasteBatch id') }}</div>
+        <div class="col-md-2">{{ form.submit(class="btn btn-primary") }}</div>
+    </form>
+    <div class="table-responsive card border-0 shadow-sm">
+        <table class="table table-sm mb-0 small">
+            <thead class="table-light">
+                <tr><th>Time</th><th>Actor</th><th>Role</th><th>Entity</th><th>Action</th><th>Payload</th></tr>
+            </thead>
+            <tbody>
+                {% for log in pagination.items %}
+                <tr>
+                    <td>{{ log.created_at }}</td>
+                    <td>{{ log.actor_name }}</td>
+                    <td>{{ log.actor_role }}</td>
+                    <td>{{ log.entity_type }} #{{ log.entity_id }}</td>
+                    <td><code>{{ log.action }}</code></td>
+                    <td class="text-break" style="max-width:280px">{{ log.after_data or log.before_data or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No rows.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagination.pages > 1 %}
+    <nav class="mt-2">
+        <ul class="pagination pagination-sm">
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {{ 'active' if p == pagination.page else '' }}">
+                <a class="page-link" href="{{ url_for('audit_logs', page=p, actor=form.actor.data, entity_type=form.entity_type.data, batch_id=form.batch_id.data) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

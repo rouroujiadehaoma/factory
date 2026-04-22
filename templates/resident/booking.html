@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Book Recycling - UCD Green Recycle{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Booking Steps Indicator -->
+            <div class="booking-steps mb-5">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="step-circle active">
+                            <i class="fas fa-list fa-lg"></i>
+                        </div>
+                        <div class="step-label mt-2">Select Category</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="step-circle">
+                            <i class="fas fa-calendar fa-lg"></i>
+                        </div>
+                        <div class="step-label mt-2">Schedule Time</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="step-circle">
+                            <i class="fas fa-check fa-lg"></i>
+                        </div>
+                        <div class="step-label mt-2">Confirm Booking</div>
+                    </div>
+                </div>
+                <div class="step-progress mt-3">
+                    <div class="step-progress-bar" style="width: 33%;"></div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Book Recycling Service Now</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('resident_booking') }}" id="bookingForm" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Step 1: Select Recycling Category -->
+                        <div class="booking-step active" id="step1">
+                            <h5 class="mb-4">Step 1: Select Recycling Category</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="category-card" onclick="selectCategory('paper')">
+                                        <div class="category-icon bg-success text-white">
+                                            <i class="fas fa-newspaper fa-2x"></i>
+                                        </div>
+                                        <div class="category-info">
+                                            <h6 class="mb-1">Paper</h6>
+                                            <small class="text-muted">Newspapers, magazines, cardboard, office paper, etc.</small>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="garbage_type" value="paper" id="paperRadio" required>
+                                            <label class="form-check-label" for="paperRadio">Select</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="category-card" onclick="selectCategory('plastic')">
+                                        <div class="category-icon bg-primary text-white">
+                                            <i class="fas fa-bottle-water fa-2x"></i>
+                                        </div>
+                                        <div class="category-info">
+                                            <h6 class="mb-1">Plastic Bottles</h6>
+                                            <small class="text-muted">PET plastic bottles, beverage bottles, etc.</small>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="garbage_type" value="plastic" id="plasticRadio" required>
+                                            <label class="form-check-label" for="plasticRadio">Select</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="category-card" onclick="selectCategory('clothes')">
+                                        <div class="category-icon bg-warning text-white">
+                                            <i class="fas fa-tshirt fa-2x"></i>
+                                        </div>
+                                        <div class="category-info">
+                                            <h6 class="mb-1">Old Clothing</h6>
+                                            <small class="text-muted">Old clothes, shoes, textiles, etc.</small>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="garbage_type" value="clothes" id="clothesRadio" required>
+                                            <label class="form-check-label" for="clothesRadio">Select</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="category-card" onclick="selectCategory('electronic')">
+                                        <div class="category-icon bg-danger text-white">
+                                            <i class="fas fa-mobile-alt fa-2x"></i>
+                                        </div>
+                                        <div class="category-info">
+                                            <h6 class="mb-1">Electronic Waste</h6>
+                                            <small class="text-muted">Old phones, chargers, batteries, etc.</small>
+                                        </div>
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="garbage_type" value="electronic" id="electronicRadio" required>
+                                            <label class="form-check-label" for="electronicRadio">Select</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-success" onclick="nextStep(2)">Next <i class="fas fa-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Schedule Time and Method -->
+                        <div class="booking-step" id="step2">
+                            <h5 class="mb-4">Step 2: Select Appointment Time and Collection Method</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Collection Method</label>
+                                        <div class="recycle-method">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="recycle_method" id="doorToDoor" value="door-to-door" checked required>
+                                                <label class="form-check-label" for="doorToDoor">
+                                                    <i class="fas fa-truck text-success me-2"></i>Door-to-Door Collection
+                                                    <small class="text-muted d-block">Staff will collect at your specified location</small>
+                                                </label>
+                                            </div>
+                                            <div class="form-check mt-3">
+                                                <input class="form-check-input" type="radio" name="recycle_method" id="dropOff" value="drop-off" required>
+                                                <label class="form-check-label" for="dropOff">
+                                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>Drop-off Point
+                                                    <small class="text-muted d-block">Drop off at designated collection point yourself</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.reserve_time.label(class="form-label") }}
+                                        <input type="text" name="reserve_time" id="reserve_time" class="form-control" required>
+                                        {% if form.reserve_time.errors %}
+                                            <div class="text-danger small">{{ form.reserve_time.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
+                                    <i class="fas fa-arrow-left me-1"></i> Previous
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="nextStep(3)">Next <i class="fas fa-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Confirm Booking Information -->
+                        <div class="booking-step" id="step3">
+                            <h5 class="mb-4">Step 3: Confirm Booking Information</h5>
+                            <div class="mb-3">
+                                {{ form.contact_phone.label(class="form-label") }}
+                                {{ form.contact_phone(class="form-control") }}
+                                {% if form.contact_phone.errors %}
+                                    <div class="text-danger small">{{ form.contact_phone.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3" id="addressField">
+                                {{ form.detail_address.label(class="form-label") }}
+                                {{ form.detail_address(class="form-control", rows="3") }}
+                                {% if form.detail_address.errors %}
+                                    <div class="text-danger small">{{ form.detail_address.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.remark.label(class="form-label") }}
+                                {{ form.remark(class="form-control", rows="2") }}
+                            </div>
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Notice:</strong> After successful booking, you can check the booking status in "My Appointments".
+                            </div>
+                            <div class="mt-4 d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
+                                    <i class="fas fa-arrow-left me-1"></i> Previous
+                                </button>
+                                {{ form.submit(class="btn btn-success btn-lg") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Booking form JavaScript functionality.
+ * Handles multi-step form navigation, validation, and dynamic field display.
+ */
+
+// Track current step in the multi-step booking form
+let currentStep = 1;
+
+/**
+ * Handle category selection in step 1.
+ * Updates radio button and applies visual selection styling via CSS class.
+ * 
+ * @param {string} category - The selected garbage category (paper, plastic, etc.)
+ */
+function selectCategory(category) {
+    // Check the corresponding radio button
+    document.getElementById(category + 'Radio').checked = true;
+    // Remove selected class from all category cards
+    document.querySelectorAll('.category-card').forEach(card => card.classList.remove('selected'));
+    // Add selected class to clicked card for visual feedback
+    event.currentTarget.classList.add('selected');
+}
+
+/**
+ * Navigate to next step in booking form.
+ * Validates current step before proceeding and updates UI elements.
+ * 
+ * @param {number} step - The step number to navigate to
+ */
+async function nextStep(step) {
+    // Validate current step before allowing navigation
+    if (await validateStep(currentStep)) {
+        // Hide all steps and remove active indicators
+        document.querySelectorAll('.booking-step').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.step-circle').forEach(s => s.classList.remove('active'));
+        
+        // Show target step and activate corresponding indicator
+        document.getElementById('step' + step).classList.add('active');
+        document.querySelectorAll('.step-circle')[step - 1].classList.add('active');
+        
+        // Update progress bar width based on current step
+        const progressWidth = (step / 3) * 100 + '%';
+        document.querySelector('.step-progress-bar').style.width = progressWidth;
+        currentStep = step;
+        
+        // Special handling for step 3: show/hide address field based on collection method
+        if (step === 3) {
+            const method = document.querySelector('input[name="recycle_method"]:checked').value;
+            const addressField = document.getElementById('addressField');
+            if (method === 'door-to-door') {
+                // Show address field and make it required for door-to-door collection
+                addressField.style.display = 'block';
+                addressField.querySelector('textarea').required = true;
+            } else {
+                // Hide address field for drop-off method
+                addressField.style.display = 'none';
+                addressField.querySelector('textarea').required = false;
+            }
+        }
+    }
+}
+
+/**
+ * Navigate to previous step in booking form.
+ * Updates UI elements to show previous step without validation.
+ * 
+ * @param {number} step - The step number to navigate back to
+ */
+function prevStep(step) {
+    // Hide all steps and remove active indicators
+    document.querySelectorAll('.booking-step').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.step-circle').forEach(s => s.classList.remove('active'));
+    
+    // Show target step and activate corresponding indicator
+    document.getElementById('step' + step).classList.add('active');
+    document.querySelectorAll('.step-circle')[step - 1].classList.add('active');
+    
+    // Update progress bar width
+    const progressWidth = (step / 3) * 100 + '%';
+    document.querySelector('.step-progress-bar').style.width = progressWidth;
+    currentStep = step;
+}
+
+/**
+ * Validate form data for current step before allowing navigation.
+ * 
+ * @param {number} step - The step number to validate
+ * @returns {boolean} True if validation passes, false otherwise
+ */
+async function validateStep(step) {
+    if (step === 1) {
+        // Validate that a garbage category is selected
+        const selected = document.querySelector('input[name="garbage_type"]:checked');
+        if (!selected) {
+            await customAlert('Please select a recycling category');
+            return false;
+        }
+    } else if (step === 2) {
+        // Validate that appointment date and time are selected
+        const date = document.querySelector('input[name="reserve_time"]').value;
+        if (!date) {
+            await customAlert('Please select appointment date and time');
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Initialize date/time picker when page loads.
+ * Configures Flatpickr library for appointment time selection with validation.
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to tomorrow (users cannot book same-day appointments)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Initialize Flatpickr on the appointment time input field
+    const dateInput = document.querySelector('input[name="reserve_time"]');
+    if (dateInput) {
+        flatpickr(dateInput, {
+            enableTime: true,              // Enable time selection
+            dateFormat: "Y-m-d\\TH:i",     // ISO format for form submission
+            minDate: tomorrow,             // Prevent past dates
+            time_24hr: false,              // Use 12-hour format
+            locale: "en",                  // English locale
+            minuteIncrement: 30,           // Only allow 30-minute intervals
+            allowInput: false              // Disable manual text input
+        });
+    }
+
+    // Client-side validation before final submission
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', async function(e) {
+            const errors = [];
+
+            const category = bookingForm.querySelector('input[name="garbage_type"]:checked');
+            if (!category) {
+                errors.push('Please select a recycling category.');
+            }
+
+            const reserve = bookingForm.querySelector('input[name="reserve_time"]');
+            if (!reserve || !reserve.value.trim()) {
+                errors.push('Please select appointment date and time.');
+            }
+
+            const phone = bookingForm.querySelector('input[name="contact_phone"]');
+            if (!phone || !phone.value.trim()) {
+                errors.push('Please enter contact phone.');
+            }
+
+            const method = bookingForm.querySelector('input[name="recycle_method"]:checked');
+            if (method && method.value === 'door-to-door') {
+                const address = bookingForm.querySelector('textarea[name="detail_address"]');
+                if (!address || !address.value.trim()) {
+                    errors.push('Please provide detailed address for door-to-door collection.');
+                }
+            }
+
+            if (errors.length > 0) {
+                e.preventDefault();
+                await customAlert(errors.join('\n'));
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

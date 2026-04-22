@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Management - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-calendar-check text-success me-2"></i>Appointment Management</h2>
+            <p class="text-muted mb-0">Manage campus waste recycling appointments, assign collection tasks</p>
+        </div>
+        <button class="btn btn-success" onclick="location.reload()">
+            <i class="fas fa-sync me-1"></i>Refresh
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-warning">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ stats.pending }}</h4>
+                    <small class="text-muted">Pending Review</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-info">
+                <div class="card-body">
+                    <i class="fas fa-user-check fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ stats.assigned }}</h4>
+                    <small class="text-muted">Assigned Tasks</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-primary">
+                <div class="card-body">
+                    <i class="fas fa-truck fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">{{ stats.in_progress }}</h4>
+                    <small class="text-muted">In Progress</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-success">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ stats.completed }}</h4>
+                    <small class="text-muted">Completed This Month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Appointment Status</label>
+                    <select name="status" class="form-select">
+                        <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Review</option>
+                        <option value="assigned" {% if current_status == 'assigned' %}selected{% endif %}>Assigned</option>
+                        <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Recycling Category</label>
+                    <select name="category" class="form-select">
+                        <option value="all" {% if current_category == 'all' %}selected{% endif %}>All Categories</option>
+                        <option value="paper" {% if current_category == 'paper' %}selected{% endif %}>Paper</option>
+                        <option value="plastic" {% if current_category == 'plastic' %}selected{% endif %}>Plastic Bottles</option>
+                        <option value="clothes" {% if current_category == 'clothes' %}selected{% endif %}>Old Clothing</option>
+                        <option value="electronic" {% if current_category == 'electronic' %}selected{% endif %}>Electronic Waste</option>
+                        <option value="other" {% if current_category == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-filter me-1"></i>Filter
+                        </button>
+                        <a href="{{ url_for('manager_appointments') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment List -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Appointment List</h5>
+            <small class="text-muted">Total {{ orders.total }} records</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Resident Info</th>
+                            <th>Category</th>
+                            <th>Appointment Time</th>
+                            <th>Collection Method</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders.items %}
+                        <tr>
+                            <td><span class="fw-bold text-primary">#RC{{ "%06d"|format(order.order_id) }}</span></td>
+                            <td>
+                                <div>
+                                    <div class="fw-bold">{{ order.resident.user.username }}</div>
+                                    <small class="text-muted">{{ order.resident.dorm_office_addr or 'N/A' }}</small>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-success">{{ order.garbage_type|title }}</span></td>
+                            <td>
+                                <div>
+                                    <div>{{ order.reserve_time.strftime('%Y-%m-%d %H:%M') if order.reserve_time else 'N/A' }}</div>
+                                    <small class="text-muted">{{ order.recycle_method|replace('-', ' ')|title }}</small>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-info">{{ order.recycle_method|replace('-', ' ')|title }}</span></td>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if order.order_status == 'pending' else 'info' if order.order_status == 'assigned' else 'primary' if order.order_status == 'in_progress' else 'success' if order.order_status == 'completed' else 'danger' }}">{{ order.order_status|replace('_', ' ')|title }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if order.order_status == 'pending' %}
+                                    <button class="btn btn-outline-success" onclick="approveAppointment({{ order.order_id }})">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    {% if order.order_status in ['assigned', 'in_progress'] %}
+                                    <button class="btn btn-outline-success" onclick="completeAppointment({{ order.order_id }})">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('manager_appointment_detail', order_id=order.order_id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No appointments found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if orders.pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Appointment list pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if orders.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.prev_num }}&status={{ current_status }}&category={{ current_category }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">Previous</a>
+                    </li>
+                    {% endif %}
+                    {% for page_num in orders.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == orders.page %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                            {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}&status={{ current_status }}&category={{ current_category }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><a class="page-link">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if orders.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.next_num }}&status={{ current_status }}&category={{ current_category }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function approveAppointment(orderId) {
+    const confirmed = await customConfirm('Approve this appointment?');
+    if (confirmed) {
+        fetch(`/manager/appointment/${orderId}/approve`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to approve appointment');
+            }
+        });
+    }
+}
+
+async function completeAppointment(orderId) {
+    const weight = await customPrompt('Please enter recycled weight (kg):');
+    if (weight && !isNaN(weight) && parseFloat(weight) > 0) {
+        fetch(`/manager/appointment/${orderId}/complete`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({weight: weight})
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                await customAlert(`Appointment completed! Points awarded: ${data.points}`);
+                location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to complete appointment');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Redeem Points - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3"><i class="fas fa-gift text-success me-2"></i>Redeem Your Points</h2>
+            <div class="card bg-success bg-opacity-10 border-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="text-success mb-0">Your Available Points</h4>
+                            <p class="text-muted mb-0">Earned through recycling activities</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h1 class="text-success mb-0">{{ resident.garbage_points if resident else 0 }}</h1>
+                            <small class="text-muted">points available</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redemption History -->
+    {% if redemptions %}
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Redemptions</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Reward</th>
+                            <th>Points Used</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for redemption in redemptions %}
+                        <tr>
+                            <td>{{ redemption.reward.reward_name }}</td>
+                            <td><span class="text-danger">-{{ redemption.points_used }}</span></td>
+                            <td>
+                                {% if redemption.redemption_status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif redemption.redemption_status == 'approved' %}
+                                    <span class="badge bg-info">Approved</span>
+                                {% elif redemption.redemption_status == 'fulfilled' %}
+                                    <span class="badge bg-success">Fulfilled</span>
+                                {% elif redemption.redemption_status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ redemption.redemption_time.strftime('%Y-%m-%d %H:%M') if redemption.redemption_time else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Rewards -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-store me-2"></i>Available Rewards</h5>
+        </div>
+        <div class="card-body">
+            {% if rewards %}
+            <div class="row g-4">
+                {% for reward in rewards %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm reward-card">
+                        {% if reward.image_url %}
+                        <img src="{{ reward.image_url }}" class="card-img-top" alt="{{ reward.reward_name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-gift fa-4x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ reward.reward_name }}</h5>
+                            <p class="card-text text-muted flex-grow-1">{{ reward.reward_description }}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-success fs-6">{{ reward.points_cost }} Points</span>
+                                    {% if reward.stock_quantity >= 0 %}
+                                        <small class="text-muted">Stock: {{ reward.stock_quantity }}</small>
+                                    {% else %}
+                                        <small class="text-success">Unlimited</small>
+                                    {% endif %}
+                                </div>
+                                <button class="btn btn-success w-100 redeem-btn" 
+                                        data-reward-id="{{ reward.reward_id }}"
+                                        data-reward-name="{{ reward.reward_name }}"
+                                        data-points-cost="{{ reward.points_cost }}"
+                                        {% if resident.garbage_points < reward.points_cost or (reward.stock_quantity >= 0 and reward.stock_quantity <= 0) %}disabled{% endif %}>
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    {% if resident.garbage_points < reward.points_cost %}
+                                        Insufficient Points
+                                    {% elif reward.stock_quantity >= 0 and reward.stock_quantity <= 0 %}
+                                        Out of Stock
+                                    {% else %}
+                                        Redeem Now
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No rewards available at the moment. Check back later!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Redemption Confirmation Modal -->
+<div class="modal fade" id="redeemModal" tabindex="-1" aria-labelledby="redeemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="redeemModalLabel">
+                    <i class="fas fa-gift me-2"></i>Confirm Redemption
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to redeem:</p>
+                <h5 id="modalRewardName" class="text-success"></h5>
+                <p class="mb-2">Cost: <strong id="modalPointsCost" class="text-danger"></strong> points</p>
+                <p class="text-muted small">Your remaining points after redemption: <strong id="modalRemainingPoints"></strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmRedeemBtn">
+                    <i class="fas fa-check me-2"></i>Confirm Redemption
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Points redemption functionality.
+ * Handles reward redemption with confirmation and AJAX requests.
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const redeemButtons = document.querySelectorAll('.redeem-btn');
+    const redeemModal = new bootstrap.Modal(document.getElementById('redeemModal'));
+    let currentRewardId = null;
+    
+    // Add click handlers to all redeem buttons
+    redeemButtons.forEach(button => {
+        if (!button.disabled) {
+            button.addEventListener('click', function() {
+                const rewardId = this.getAttribute('data-reward-id');
+                const rewardName = this.getAttribute('data-reward-name');
+                const pointsCost = parseInt(this.getAttribute('data-points-cost'));
+                const currentPoints = {{ resident.garbage_points if resident else 0 }};
+                const remainingPoints = currentPoints - pointsCost;
+                
+                // Set modal content
+                document.getElementById('modalRewardName').textContent = rewardName;
+                document.getElementById('modalPointsCost').textContent = pointsCost;
+                document.getElementById('modalRemainingPoints').textContent = remainingPoints;
+                
+                // Store reward ID for confirmation
+                currentRewardId = rewardId;
+                
+                // Show modal
+                redeemModal.show();
+            });
+        }
+    });
+    
+    // Handle confirmation
+    document.getElementById('confirmRedeemBtn').addEventListener('click', function() {
+        if (!currentRewardId) return;
+        
+        // Disable button during request
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        // Send redemption request
+        fetch(`/resident/redeem/${currentRewardId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                // Show success message
+                await customAlert(data.message);
+                // Reload page to show updated points and redemption
+                window.location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to redeem reward. Please try again.');
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check me-2"></i>Confirm Redemption';
+            }
+        })
+        .catch(async error => {
+            console.error('Error:', error);
+            await customAlert('An error occurred while processing your redemption. Please try again.');
+            // Re-enable button
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-check me-2"></i>Confirm Redemption';
+        });
+    });
+    
+    // Reset modal when closed
+    document.getElementById('redeemModal').addEventListener('hidden.bs.modal', function() {
+        currentRewardId = null;
+        const confirmBtn = document.getElementById('confirmRedeemBtn');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check me-2"></i>Confirm Redemption';
+    });
+});
+</script>
+{% endblock %}
+

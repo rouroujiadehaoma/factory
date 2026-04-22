@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Alert rules{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold">New rule</div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_rule_new') }}">
+                        {{ form.hidden_tag() }}
+                        {% for field in [form.rule_name, form.rule_type, form.threshold, form.severity] %}
+                        <div class="mb-2">{{ field.label(class="form-label") }}{{ field(class="form-control") }}</div>
+                        {% endfor %}
+                        <div class="form-check mb-3">{{ form.enabled(class="form-check-input") }}{{ form.enabled.label(class="form-check-label") }}</div>
+                        {{ form.submit(class="btn btn-primary btn-sm") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <h2 class="h5 mb-3">Active configuration</h2>
+            <table class="table table-sm bg-white shadow-sm">
+                <thead><tr><th>Name</th><th>Type</th><th>Threshold</th><th>Severity</th><th>On</th><th></th></tr></thead>
+                <tbody>
+                    {% for r in rules %}
+                    <tr>
+                        <td>{{ r.rule_name }}</td>
+                        <td><code>{{ r.rule_type }}</code></td>
+                        <td>{{ r.threshold }}</td>
+                        <td>{{ r.severity }}</td>
+                        <td>{{ 'yes' if r.enabled else 'no' }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin_rule_toggle', rule_id=r.id) }}" class="d-inline">
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">Toggle</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

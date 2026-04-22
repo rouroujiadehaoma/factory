@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Data Statistics - UCD Green Recycle{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-line text-success me-2"></i>Data Statistics and Analysis</h2>
+            <p class="text-muted mb-0">Comprehensive overview of campus waste sorting and recycling</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select" id="timeRange" style="width: auto;" onchange="location.href='{{ url_for('manager_statistics') }}?time_range=' + this.value">
+                <option value="week" {% if time_range == 'week' %}selected{% endif %}>This Week</option>
+                <option value="month" {% if time_range == 'month' %}selected{% endif %}>This Month</option>
+                <option value="quarter" {% if time_range == 'quarter' %}selected{% endif %}>This Quarter</option>
+                <option value="year" {% if time_range == 'year' %}selected{% endif %}>This Year</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Core Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-success">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ stats.participant_count }}</h4>
+                    <small class="text-muted">Participating Residents</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-primary">
+                <div class="card-body">
+                    <i class="fas fa-weight fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">{{ "%.1f"|format(stats.total_weight) }}kg</h4>
+                    <small class="text-muted">Total Recycled Weight</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-warning">
+                <div class="card-body">
+                    <i class="fas fa-recycle fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ "%.1f"|format(stats.category_stats.get('paper', 0) + stats.category_stats.get('plastic', 0)) }}kg</h4>
+                    <small class="text-muted">Recyclables Weight</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center border-info">
+                <div class="card-body">
+                    <i class="fas fa-coins fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ stats.total_points }}</h4>
+                    <small class="text-muted">Total Points Awarded</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recycling Volume Trend Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="recycleTrendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Category Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryPieChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Trend Chart
+    const trendCtx = document.getElementById('recycleTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Total Recycled (kg)',
+                data: [300, 350, 400, {{ stats.total_weight|int }}],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Pie Chart
+    const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Paper', 'Plastic', 'Clothing', 'E-Waste', 'Other'],
+            datasets: [{
+                data: [
+                    {{ stats.category_stats.get('paper', 0) }},
+                    {{ stats.category_stats.get('plastic', 0) }},
+                    {{ stats.category_stats.get('clothes', 0) }},
+                    {{ stats.category_stats.get('electronic', 0) }},
+                    {{ stats.category_stats.get('other', 0) }}
+                ],
+                backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+});
+</script>
+{% endblock %}
+

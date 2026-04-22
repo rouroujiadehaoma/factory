@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Order Detail - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Order Details - #RC{{ "%06d"|format(order.order_id) }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Category:</strong> {{ order.garbage_type|title }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{{ 'warning' if order.order_status == 'pending' else 'info' if order.order_status == 'assigned' else 'success' if order.order_status == 'completed' else 'secondary' }}">
+                                {{ order.order_status|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Appointment Time:</strong> {{ order.reserve_time.strftime('%Y-%m-%d %H:%M') if order.reserve_time else 'N/A' }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Collection Method:</strong> {{ order.recycle_method|replace('-', ' ')|title }}
+                        </div>
+                    </div>
+                    {% if order.recycle_weight %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Recycled Weight:</strong> {{ "%.1f"|format(order.recycle_weight) }}kg
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if order.detail_address %}
+                    <div class="mb-3">
+                        <strong>Address:</strong> {{ order.detail_address }}
+                    </div>
+                    {% endif %}
+                    {% if order.remark %}
+                    <div class="mb-3">
+                        <strong>Remarks:</strong> {{ order.remark }}
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <strong>Created:</strong> {{ order.create_time.strftime('%Y-%m-%d %H:%M:%S') if order.create_time else 'N/A' }}
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ url_for('resident_orders') }}" class="btn btn-secondary">Back to Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 mb-3">Compliance exports</h1>
+    <p class="text-secondary">One-click exports for regulators and internal review (logged in <code>report_export_history</code>).</p>
+    <div class="list-group shadow-sm" style="max-width:520px">
+        <a class="list-group-item list-group-item-action" href="{{ url_for('export_summary_csv') }}">
+            <strong>Full batch listing</strong> — CSV
+        </a>
+        <a class="list-group-item list-group-item-action" href="{{ url_for('export_monthly_pdf') }}">
+            <strong>Monthly snapshot</strong> — PDF (summary counts + open alerts)
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Resident Dashboard - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Left Sidebar - Personal Profile -->
+        <div class="col-lg-3">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Personal Profile</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="profile-avatar mb-3">
+                        <i class="fas fa-user-circle fa-4x text-success"></i>
+                    </div>
+                    <h5 class="card-title">{{ current_user.username }}</h5>
+                    <p class="text-muted">{{ current_user.ucd_email }}</p>
+
+                    <!-- Points Display -->
+                    <div class="points-display bg-success bg-opacity-10 rounded p-3 mb-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-coins fa-2x text-warning me-3"></i>
+                            <div>
+                                <div class="h4 text-success mb-0">{{ resident.garbage_points if resident else 0 }}</div>
+                                <small class="text-muted">Eco Points</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="info-list text-start">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Contact Number</small>
+                            <span>{{ current_user.phone or 'Not set' }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Address</small>
+                            <span>{{ resident.dorm_office_addr or 'Not set' if resident else 'Not set' }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Registration Date</small>
+                            <span>{{ current_user.create_time.strftime('%Y-%m-%d') if current_user.create_time else 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{{ url_for('resident_profile') }}" class="btn btn-outline-success btn-sm mt-3 w-100">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+                </div>
+                <div class="card-body p-0">
+                    <a href="{{ url_for('resident_booking') }}" class="quick-action-item d-block p-3 border-bottom text-decoration-none">
+                        <i class="fas fa-calendar-plus text-success me-2"></i>
+                        <span>Book Recycling</span>
+                    </a>
+                    <a href="{{ url_for('knowledge') }}" class="quick-action-item d-block p-3 border-bottom text-decoration-none">
+                        <i class="fas fa-book text-primary me-2"></i>
+                        <span>Sorting Guide</span>
+                    </a>
+                    <a href="{{ url_for('resident_redeem') }}" class="quick-action-item d-block p-3 border-bottom text-decoration-none">
+                        <i class="fas fa-shopping-cart text-warning me-2"></i>
+                        <span>Points Store</span>
+                    </a>
+                    <a href="{{ url_for('resident_feedback') }}" class="quick-action-item d-block p-3 text-decoration-none">
+                        <i class="fas fa-comments text-info me-2"></i>
+                        <span>Submit Feedback</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="col-lg-9">
+            <!-- Welcome Card -->
+            <div class="alert alert-success border-0 shadow mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-sun fa-2x me-3"></i>
+                    <div>
+                        <h5 class="mb-1">Welcome, {{ current_user.username }}!</h5>
+                        <p class="mb-0">It's another wonderful day to contribute to a green campus!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card text-center border-success">
+                        <div class="card-body">
+                            <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+                            <h4 class="text-success">{{ stats.total_orders }}</h4>
+                            <small class="text-muted">Appointments This Month</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center border-primary">
+                        <div class="card-body">
+                            <i class="fas fa-recycle fa-2x text-primary mb-2"></i>
+                            <h4 class="text-primary">{{ "%.1f"|format(stats.recycled_weight) }}kg</h4>
+                            <small class="text-muted">Recycled This Month</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center border-warning">
+                        <div class="card-body">
+                            <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                            <h4 class="text-warning">{{ resident.garbage_points if resident else 0 }}</h4>
+                            <small class="text-muted">Total Points</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center border-info">
+                        <div class="card-body">
+                            <i class="fas fa-star fa-2x text-info mb-2"></i>
+                            <h4 class="text-info">{{ "%.0f"|format((stats.completed_orders / stats.total_orders * 100) if stats.total_orders > 0 else 0) }}%</h4>
+                            <small class="text-muted">Completion Rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Tabs -->
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="dashboardTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab">
+                                <i class="fas fa-calendar me-1"></i>My Appointments
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="points-tab" data-bs-toggle="tab" data-bs-target="#points" type="button" role="tab">
+                                <i class="fas fa-coins me-1"></i>Points History
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab">
+                                <i class="fas fa-comments me-1"></i>My Feedback
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="dashboardTabsContent">
+                        <!-- Appointment Records -->
+                        <div class="tab-pane fade show active" id="appointments" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Recent Appointments</h6>
+                                <a href="{{ url_for('resident_booking') }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus me-1"></i>New Appointment
+                                </a>
+                            </div>
+                            <div class="appointment-list">
+                                {% for order in orders %}
+                                <div class="appointment-item border rounded p-3 mb-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2">
+                                            <div class="appointment-id text-primary fw-bold">#RC{{ "%06d"|format(order.order_id) }}</div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-success">{{ order.garbage_type|title }}</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted">{{ order.reserve_time.strftime('%Y-%m-%d %H:%M') if order.reserve_time else 'N/A' }}</small>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-info">{{ order.recycle_method|replace('-', ' ')|title }}</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge bg-{{ 'warning' if order.order_status == 'pending' else 'info' if order.order_status == 'assigned' else 'success' if order.order_status == 'completed' else 'secondary' }}">{{ order.order_status|replace('_', ' ')|title }}</span>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <a href="{{ url_for('resident_order_detail', order_id=order.order_id) }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if order.order_status not in ['completed', 'cancelled'] %}
+                                            <button class="btn btn-outline-danger btn-sm" onclick="cancelOrder({{ order.order_id }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-muted text-center py-4">No appointments yet. <a href="{{ url_for('resident_booking') }}">Book your first recycling appointment!</a></p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Points Details / Points Store -->
+                        <div class="tab-pane fade" id="points" role="tabpanel">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card bg-success bg-opacity-10 border-success">
+                                        <div class="card-body text-center">
+                                            <h5 class="text-success">Total Points</h5>
+                                            <h3 class="text-success">{{ resident.garbage_points if resident else 0 }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-3">Points are awarded after completing recycling appointments.</p>
+                            
+                            <!-- Points Store Actions -->
+                            <div class="d-grid gap-2 d-md-flex mb-4">
+                                <a href="{{ url_for('resident_points') }}" class="btn btn-outline-success">
+                                    <i class="fas fa-history me-2"></i>View Points History
+                                </a>
+                                <a href="{{ url_for('resident_redeem') }}" class="btn btn-success">
+                                    <i class="fas fa-gift me-2"></i>Redeem Points
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Feedback Records -->
+                        <div class="tab-pane fade" id="feedback" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">My Feedback</h6>
+                                <a href="{{ url_for('resident_feedback') }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Submit Feedback
+                                </a>
+                            </div>
+                            {% for feedback in feedbacks %}
+                            <div class="feedback-item card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <h6 class="card-title mb-0">{{ feedback.feedback_type|replace('_', ' ')|title }}</h6>
+                                        <span class="badge bg-{{ 'success' if feedback.handle_status == 'replied' else 'info' if feedback.handle_status == 'processing' else 'warning' }}">{{ feedback.handle_status|title }}</span>
+                                    </div>
+                                    <p class="card-text text-muted small mb-2">{{ feedback.feedback_content[:100] }}...</p>
+                                    <small class="text-muted">{{ feedback.feedback_time.strftime('%Y-%m-%d %H:%M') if feedback.feedback_time else 'N/A' }}</small>
+                                    {% if feedback.reply_content %}
+                                    <div class="feedback-reply bg-light rounded p-2 mt-2">
+                                        <small class="text-success fw-bold">Admin Reply:</small>
+                                        <small class="text-muted">{{ feedback.reply_content }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-muted text-center py-4">No feedback submitted yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function cancelOrder(orderId) {
+    const confirmed = await customConfirm('Are you sure you want to cancel this order?');
+    if (confirmed) {
+        fetch(`/resident/order/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(async data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                await customAlert(data.message || 'Failed to cancel order');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}System Logs - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4"><i class="fas fa-file-alt text-success me-2"></i>System Logs</h2>
+    
+    <!-- Log Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>Error Logs
+                    </h5>
+                    <p class="card-text">
+                        <strong>Entries:</strong> {{ stats.error.lines }}<br>
+                        <strong>Size:</strong> {{ "%.2f"|format(stats.error.size / 1024) }} KB<br>
+                        <strong>Last Modified:</strong> {{ stats.error.last_modified }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Warning Logs
+                    </h5>
+                    <p class="card-text">
+                        <strong>Entries:</strong> {{ stats.warning.lines }}<br>
+                        <strong>Size:</strong> {{ "%.2f"|format(stats.warning.size / 1024) }} KB<br>
+                        <strong>Last Modified:</strong> {{ stats.warning.last_modified }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title text-info">
+                        <i class="fas fa-info-circle me-2"></i>Info Logs
+                    </h5>
+                    <p class="card-text">
+                        <strong>Entries:</strong> {{ stats.info.lines }}<br>
+                        <strong>Size:</strong> {{ "%.2f"|format(stats.info.size / 1024) }} KB<br>
+                        <strong>Last Modified:</strong> {{ stats.info.last_modified }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Controls -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Log Type</label>
+                    <select name="type" class="form-select">
+                        <option value="all" {% if current_type == 'all' %}selected{% endif %}>All Logs</option>
+                        <option value="error" {% if current_type == 'error' %}selected{% endif %}>Error Only</option>
+                        <option value="warning" {% if current_type == 'warning' %}selected{% endif %}>Warning Only</option>
+                        <option value="info" {% if current_type == 'info' %}selected{% endif %}>Info Only</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Number of Lines</label>
+                    <select name="lines" class="form-select">
+                        <option value="50" {% if lines == 50 %}selected{% endif %}>50 lines</option>
+                        <option value="100" {% if lines == 100 %}selected{% endif %}>100 lines</option>
+                        <option value="200" {% if lines == 200 %}selected{% endif %}>200 lines</option>
+                        <option value="500" {% if lines == 500 %}selected{% endif %}>500 lines</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-success w-100">Filter Logs</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Log Entries -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Log Entries</h5>
+            <span class="badge bg-secondary">{{ logs|length }} entries</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 100px;">Level</th>
+                            <th>Timestamp</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if logs %}
+                            {% for level, log_entry in logs %}
+                            <tr>
+                                <td>
+                                    {% if level == 'ERROR' %}
+                                        <span class="badge bg-danger">ERROR</span>
+                                    {% elif level == 'WARNING' %}
+                                        <span class="badge bg-warning text-dark">WARNING</span>
+                                    {% elif level == 'INFO' %}
+                                        <span class="badge bg-info">INFO</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ level }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set parts = log_entry.split(' - ', 2) %}
+                                    {% if parts|length >= 2 %}
+                                        {{ parts[0] }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="text-break">
+                                    {% set parts = log_entry.split(' - ', 2) %}
+                                    {% if parts|length >= 2 %}
+                                        {{ parts[2] if parts|length > 2 else parts[1] }}
+                                    {% else %}
+                                        {{ log_entry }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No log entries found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

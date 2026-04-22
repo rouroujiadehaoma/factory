@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Cover — Hazardous Waste Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --paper: #fafafa;
+            --ink: #1c1917;
+            --muted: #57534e;
+            --rule: #d6d3d1;
+            /* Aligns with Bootstrap `text-warning` / navbar flask accent */
+            --chem: #d97706;
+            --chem-dark: #b45309;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1.25rem;
+        }
+        .sheet {
+            width: 100%;
+            max-width: 36rem;
+            background: var(--paper);
+            border: 1px solid var(--rule);
+            border-left: 4px solid var(--chem);
+            padding: 2.75rem 2.5rem 2.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        }
+        .course {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--chem-dark);
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            font-family: "Source Serif 4", "Times New Roman", serif;
+            font-size: clamp(1.5rem, 4vw, 1.85rem);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 1.75rem;
+        }
+        .rule {
+            height: 1px;
+            background: var(--rule);
+            margin: 1.5rem 0 1.35rem;
+        }
+        .sdg {
+            font-size: 0.92rem;
+            color: var(--ink);
+        }
+        .sdg .label {
+            font-weight: 600;
+            color: var(--chem-dark);
+        }
+        ul {
+            margin-top: 1.1rem;
+            padding-left: 1.2rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        li { margin-bottom: 0.45rem; }
+        li::marker { color: var(--chem); }
+        footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--rule);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <article class="sheet">
+        <p class="course">COMP3030J — Software Engineering Project</p>
+        <h1>Hazardous Waste Management System for Chemical Plants</h1>
+        <p class="subtitle">Lifecycle tracking, compliance controls, and auditable operations</p>
+
+        <div class="rule" aria-hidden="true"></div>
+
+        <p class="sdg">
+            <span class="label">SDG 12 — Responsible Consumption and Production.</span>
+            Digital records and controlled disposal workflows for hazardous materials, reducing environmental and health risk through traceability and transparent resource stewardship.
+        </p>
+
+        <ul>
+            <li>Batch lifecycle state machine with full audit trail</li>
+            <li>Rule-based alerts for overdue storage, hazard levels, and capacity</li>
+            <li>Dashboards, regulatory exports (CSV/PDF), and REST APIs for integration</li>
+        </ul>
+
+        <footer>Hazardous waste control platform</footer>
+    </article>
+</body>
+</html>

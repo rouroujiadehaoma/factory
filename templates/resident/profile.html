@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - UCD Green Recycle{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('resident_profile') }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                            <small class="text-muted">Username cannot be changed</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ current_user.ucd_email }}" disabled>
+                            <small class="text-muted">Email cannot be changed</small>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger small">{{ form.phone.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.dorm_office_addr.label(class="form-label") }}
+                            {{ form.dorm_office_addr(class="form-control") }}
+                            {% if form.dorm_office_addr.errors %}
+                                <div class="text-danger small">{{ form.dorm_office_addr.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                    
+                    <!-- Account Deletion Section -->
+                    <hr class="my-4">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">Delete Account</h6>
+                            <p class="card-text text-muted">
+                                Once you delete your account, there is no going back. This will permanently delete your account 
+                                and remove all your data from our servers. This includes:
+                            </p>
+                            <ul class="text-muted">
+                                <li>Your profile information</li>
+                                <li>All your recycling orders</li>
+                                <li>Your points and rewards</li>
+                                <li>All feedback submissions</li>
+                            </ul>
+                            <button type="button" class="btn btn-danger" onclick="showDeleteAccountModal()">
+                                <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Account Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold text-danger">Warning: This action cannot be undone!</p>
+                <p>Are you absolutely sure you want to delete your account? All your data will be permanently removed.</p>
+                <p class="mb-0">Type <strong>DELETE</strong> in the box below to confirm:</p>
+                <input type="text" class="form-control mt-2" id="deleteConfirmInput" placeholder="Type DELETE to confirm">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteAccount()" disabled>
+                    <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Show delete account confirmation modal.
+ */
+function showDeleteAccountModal() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
+    modal.show();
+    
+    // Reset confirmation input
+    const confirmInput = document.getElementById('deleteConfirmInput');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    confirmInput.value = '';
+    confirmBtn.disabled = true;
+    
+    // Enable delete button only when user types "DELETE"
+    confirmInput.addEventListener('input', function() {
+        confirmBtn.disabled = this.value.trim() !== 'DELETE';
+    });
+}
+
+/**
+ * Delete user account via AJAX request.
+ */
+async function deleteAccount() {
+    // Double check confirmation
+    const confirmInput = document.getElementById('deleteConfirmInput');
+    if (confirmInput.value.trim() !== 'DELETE') {
+        await customAlert('Please type DELETE to confirm');
+        return;
+    }
+    
+    const confirmed = await customConfirm('Final confirmation: Are you absolutely sure you want to delete your account? This cannot be undone.');
+    if (!confirmed) {
+        return;
+    }
+    
+    // Get CSRF token from form
+    const csrfToken = document.querySelector('input[name="csrf_token"]');
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken.value;
+    }
+    
+    // Send delete request
+    fetch('{{ url_for("resident_delete_account") }}', {
+        method: 'POST',
+        headers: headers,
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(async data => {
+        if (data.success) {
+            await customAlert(data.message || 'Your account has been deleted. You will be redirected to the homepage.');
+            // Redirect to homepage after deletion
+            window.location.href = '{{ url_for("index") }}';
+        } else {
+            await customAlert(data.message || 'Failed to delete account. Please try again or contact support.');
+        }
+    })
+    .catch(async error => {
+        console.error('Error:', error);
+        await customAlert('An error occurred while deleting your account. Please try again or contact support.');
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ batch.batch_code }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0">{{ batch.batch_code }}</h1>
+            <p class="text-muted mb-0">{{ batch.name }} · <code>{{ batch.current_status }}</code></p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if current_user.role != 'auditor' and batch.current_status not in ['disposed','archived'] %}
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('batch_edit', batch_id=batch.id) }}">Edit</a>
+            {% endif %}
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('batch_list') }}">Back</a>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">Trace QR</div>
+                <div class="card-body text-center">
+                    <img src="{{ url_for('batch_qr_png', batch_id=batch.id) }}" alt="QR" class="img-fluid" style="max-width:200px">
+                    <p class="small text-muted mt-2 mb-0">Public URL: <a href="{{ url_for('trace_batch', code=batch.trace_code) }}" target="_blank" rel="noopener">{{ batch.trace_code }}</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold">Details</div>
+                <div class="card-body row small">
+                    <div class="col-md-6 mb-2"><strong>Category</strong><br>{{ batch.category }}</div>
+                    <div class="col-md-6 mb-2"><strong>Source unit</strong><br>{{ batch.source_unit }}</div>
+                    <div class="col-md-6 mb-2"><strong>Quantity</strong><br>{{ batch.quantity }} {{ batch.unit }}</div>
+                    <div class="col-md-6 mb-2"><strong>Hazard</strong><br>{{ batch.hazard_level }}</div>
+                    <div class="col-md-6 mb-2"><strong>Storage</strong><br>{{ batch.storage_location }}</div>
+                    <div class="col-md-6 mb-2"><strong>Responsible</strong><br>{{ batch.responsible_person }}</div>
+                    <div class="col-12 mb-2"><strong>Remarks</strong><br>{{ batch.remarks or '—' }}</div>
+                    <div class="col-12"><strong>External / manifest</strong><br>{{ batch.external_disposal_info or '—' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role != 'auditor' and sform %}
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold">Advance status (validated server-side)</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('batch_transition', batch_id=batch.id) }}" class="row g-2 align-items-end">
+                {{ sform.hidden_tag() }}
+                <div class="col-md-4">{{ sform.to_status.label(class="form-label") }}{{ sform.to_status(class="form-select") }}</div>
+                <div class="col-md-6">{{ sform.comment.label(class="form-label") }}{{ sform.comment(class="form-control") }}</div>
+                <div class="col-md-2">{{ sform.submit(class="btn btn-warning w-100") }}</div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.role != 'auditor' %}
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold">Record transfer / manifest</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('batch_transfer', batch_id=batch.id) }}" class="row g-2">
+                {{ tform.hidden_tag() }}
+                <div class="col-md-4">{{ tform.transfer_vendor.label(class="form-label") }}{{ tform.transfer_vendor(class="form-control") }}</div>
+                <div class="col-md-4">{{ tform.destination.label(class="form-label") }}{{ tform.destination(class="form-control") }}</div>
+                <div class="col-md-4">{{ tform.manifest_number.label(class="form-label") }}{{ tform.manifest_number(class="form-control") }}</div>
+                <div class="col-12">{{ tform.submit(class="btn btn-outline-primary btn-sm") }}</div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold">Lifecycle history</div>
+        <ul class="list-group list-group-flush">
+            {% for h in history %}
+            <li class="list-group-item small">
+                <strong>{{ h.changed_at }}</strong> · {{ h.from_status or '∅' }} → <code>{{ h.to_status }}</code>
+                {% if h.comment %} — {{ h.comment }}{% endif %}
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted">No history.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold">Transfers</div>
+        <ul class="list-group list-group-flush">
+            {% for t in transfers %}
+            <li class="list-group-item small">
+                {{ t.transfer_time }} · {{ t.transfer_vendor }} · manifest {{ t.manifest_number or '—' }}
+            </li>
+            {% else %}
+            <li class="list-group-item text-muted">No transfer records.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold">Recent audit (entity)</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 small">
+                <thead class="table-light"><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th></tr></thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td>{{ log.created_at }}</td>
+                        <td>{{ log.actor_name }} ({{ log.actor_role }})</td>
+                        <td>{{ log.action }}</td>
+                        <td class="text-break">{{ log.after_data or log.before_data or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-muted p-3">No audit rows for this batch.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

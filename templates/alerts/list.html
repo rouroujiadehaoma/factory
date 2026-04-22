@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 mb-3">Alert center</h1>
+    <div class="btn-group mb-3">
+        <a class="btn btn-sm btn-outline-secondary {{ 'active' if filter_status=='open' else '' }}" href="{{ url_for('alert_list', status='open') }}">Open</a>
+        <a class="btn btn-sm btn-outline-secondary {{ 'active' if filter_status=='acknowledged' else '' }}" href="{{ url_for('alert_list', status='acknowledged') }}">Acknowledged</a>
+        <a class="btn btn-sm btn-outline-secondary {{ 'active' if filter_status=='resolved' else '' }}" href="{{ url_for('alert_list', status='resolved') }}">Resolved</a>
+        <a class="btn btn-sm btn-outline-secondary {{ 'active' if filter_status=='all' else '' }}" href="{{ url_for('alert_list', status='all') }}">All</a>
+    </div>
+    <div class="list-group shadow-sm">
+        {% for e in events %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">
+                    <span class="badge bg-{{ 'danger' if e.severity=='critical' else 'warning' if e.severity=='warning' else 'secondary' }}">{{ e.severity }}</span>
+                    {{ e.message[:120] }}{% if e.message|length > 120 %}…{% endif %}
+                </h6>
+                <small>{{ e.created_at }}</small>
+            </div>
+            <p class="mb-1 small text-muted">Status: <code>{{ e.status }}</code>
+                {% if e.waste_batch_id %}· <a href="{{ url_for('batch_detail', batch_id=e.waste_batch_id) }}">Batch #{{ e.waste_batch_id }}</a>{% endif %}
+            </p>
+            {% if current_user.role in ['administrator','es_officer'] %}
+            <div class="mt-2 d-flex gap-2">
+                {% if e.status == 'open' %}
+                <form method="post" action="{{ url_for('alert_ack', event_id=e.id) }}"><button class="btn btn-sm btn-outline-primary" type="submit">Acknowledge</button></form>
+                {% endif %}
+                {% if e.status != 'resolved' %}
+                <a class="btn btn-sm btn-success" href="{{ url_for('alert_resolve', event_id=e.id) }}">Resolve</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="list-group-item text-muted">No alerts in this view.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
